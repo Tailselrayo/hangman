@@ -16,7 +16,7 @@ export function Lifebar(props: LifebarProps) {
                     return <IconHeart color="red" key={index}/>
                 }
                 else {
-                    return <IconHeartBroken color="blue" key={index}/>
+                    return <IconHeartBroken color="cyan" key={index}/>
                 }
             })}
         </SimpleGrid>
