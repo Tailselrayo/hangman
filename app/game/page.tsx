@@ -13,24 +13,19 @@ export default function Game() {
     const [isOnStart, setIsOnStart] = useState(true)
     const [imputChars, handlers] = useListState<string>([]);
     const [gameWord, setGameWord] = useState("");
-    const [hasWon, setHasWon] = useState(false);
     const [easyMode, setEasyMode] = useState(true);
 
     const possibleWords = en.words.filter((elem) => elem.englishWord.length > 4);
 
     const loseALife = () => {
-        if (lives > 0) {
+        if (lives > 0) 
             setLives(lives - 1);
-        }
     }
 
     const testVictory = () => {
         let word = gameWord.toUpperCase();
-        const i = easyMode ? 1:0;
-        console.log(word.slice(i).split('').filter((elem)=>imputChars.includes(elem)).length)
-        if (word.slice(i).split('').filter((elem)=>imputChars.includes(elem)).length + i=== gameWord.length) {
-            setHasWon(true);
-        }
+        const i = easyMode ? 1 : 0;
+        return word.slice(i).split('').filter((elem) => imputChars.includes(elem)).length + i === gameWord.length;
     }
 
     const onRetry = () => {
@@ -38,60 +33,63 @@ export default function Game() {
         handlers.setState([]);
         setIsOnStart(false);
         setGameWord(possibleWords[Math.floor(Math.random() * possibleWords.length)].englishWord);
-        setHasWon(false);
     }
 
-    const onFail = (letter: string) => {
-        handlers.append(letter);
-        loseALife();
-    }
-
-    const onSuccess = (letter: string) => {
+    const onClick = (letter: string) => {
+        if (imputChars.includes(letter))
+            return;
+        if (!gameWord.toUpperCase().split('').includes(letter)) 
+            loseALife();
         handlers.append(letter);
     }
 
-    const addALife = () => {
-        if (lives < 6) {
-            setLives(lives + 1);
-        }
+    const onKeyPress = (e: KeyboardEvent) => {
+        const letter = e.key.toUpperCase();
+        if (letter.charCodeAt(0) >= 'A'.charCodeAt(0) && letter.charCodeAt(0) <= 'Z'.charCodeAt(0) && letter.length === 1)
+            onClick(letter);
     }
 
-    console.log(gameWord)
-    useEffect(()=>testVictory(), [imputChars])
+    useEffect(() => {
+        window.addEventListener("keypress", onKeyPress)
+        return (() => window.removeEventListener("keypress", onKeyPress))
+    })
 
     return (
         <>
-            <Modal opened={!lives || isOnStart || hasWon} onClose={onRetry}>
-                <Stack>
-                    <Text>{(isOnStart?"Welcome to the hangman game !":
-                        (hasWon?"Congrats, you won !":("You lose ! The word was " + gameWord)))}
-                    </Text>
-                    <Group h="100%" align="center">
-                        <Button onClick={onRetry} color="green">
-                            {isOnStart ? "Start" : "Retry"}
-                        </Button>
-                        <Link href="/"><Button color="blue">Home</Button></Link>
-                    </Group>
-                    <Checkbox 
-                        checked={easyMode} 
-                        onChange={()=>setEasyMode(!easyMode)}
-                        label="Easy Mode"
-                    />
-                </Stack>
-            </Modal>
+            <Modal.Root closeOnClickOutside={false} opened={!lives || isOnStart || testVictory()} onClose={onRetry}>
+                <Modal.Overlay />
+                <Modal.Content >
+                    <Modal.Body>
+                        <Stack>
+                            <Text>{(isOnStart ? "Welcome to the hangman game !" :
+                                (lives !== 0 ? "Congrats, you won !" : ("You lose ! The word was " + gameWord)))}
+                            </Text>
+                            <Group h="100%" align="center">
+                                <Button onClick={onRetry} color="green">
+                                    {isOnStart ? "Start" : "Retry"}
+                                </Button>
+                                <Link href="/"><Button color="blue">Home</Button></Link>
+                            </Group>
+                            <Checkbox
+                                checked={easyMode}
+                                onChange={() => setEasyMode(!easyMode)}
+                                label="Easy Mode"
+                            />
+                        </Stack>
+                    </Modal.Body>
+                </Modal.Content>
+            </Modal.Root>
             <Stack align="center" justify="flex-start">
-                <Title>Hangman</Title>
+                <Title color="white">Hangman</Title>
                 <Lifebar lives={lives} />
                 <Group>
-                    <Button onClick={addALife} color="green">Gain a life</Button>
-                    <Button onClick={loseALife} color="red">Lose a life</Button>
+                    <Button onClick={() => setLives(0)} color="red">Kill yourself</Button>
                 </Group>
-                <Word word={gameWord} imputedChara={imputChars} hint={easyMode}/>
+                <Word word={gameWord} imputedChara={imputChars} hint={easyMode} />
                 <Keyboard
                     imputedChar={imputChars}
                     correctChar={gameWord.toUpperCase().split('')}
-                    onFail={onFail}
-                    onSuccess={onSuccess}
+                    onClick={onClick}
                 />
             </Stack>
         </>
