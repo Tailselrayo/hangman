@@ -12,7 +12,8 @@ export function useHangman(nbPlayer: number) {
             lives: 6,
             letters: [],
             pseudo: "",
-            color: "red",
+            color: "dark",
+            hasFinished: 0,
         }))
     );
     const [gameWord, setGameWord] = useState("");
@@ -23,12 +24,25 @@ export function useHangman(nbPlayer: number) {
     const possibleWords = en.words.filter((elem) => elem.englishWord.length > 4);
 
     const changeCurrent = () => {
-        setCurrent((current + 1) % nbPlayer);
+        let counter = 1;
+        while (counter < nbPlayer + 1 && playerData[(current + counter) % nbPlayer].hasFinished) {
+            counter++;
+        }
+        setCurrent((current + counter) % nbPlayer);
         setIsNextPlayerReady(true);
     }
 
     const setPlayerData = (pseudo: string, color: MantineColor) => {
         handlers.setItem(current, { ...playerData[current], pseudo, color })
+    }
+
+    const computePosition = (hasWon: boolean) => {
+        const playerFinished = playerData.filter((elem) => elem.hasFinished)
+        const countDead = playerFinished.filter((elem) => elem.lives === 0).length
+        if (!hasWon) {
+            return 4 - countDead
+        }
+        return 1 + (playerFinished.length - countDead)
     }
 
     const loseALife = () => {
@@ -38,6 +52,8 @@ export function useHangman(nbPlayer: number) {
 
     const suicide = () => {
         handlers.setItemProp(current, "lives", 0);
+        setTimeout(() => setIsNextPlayerReady(false), 500);
+        handlers.setItemProp(current, "hasFinished", computePosition(false))
     }
 
     const testVictory = () => {
@@ -46,10 +62,14 @@ export function useHangman(nbPlayer: number) {
         return word.slice(i).split('').filter((elem) => playerData[current].letters.includes(elem)).length + i === gameWord.length;
     }
 
+    const isGameFinished = () => {
+        return playerData.filter((_, index) => !playerData[index].hasFinished).length === 0
+    }
+
     const onRetry = () => {
         setIsOnStart(false);
         setGameWord(possibleWords[Math.floor(Math.random() * possibleWords.length)].englishWord);
-        handlers.apply((elem) => ({ ...elem, lives: 6, letters: [] }))
+        handlers.apply((elem) => ({ ...elem, lives: 6, letters: [], hasFinished: 0 }))
     }
 
     const onClick = (letter: string) => {
@@ -58,7 +78,8 @@ export function useHangman(nbPlayer: number) {
         if (!gameWord.toUpperCase().split('').includes(letter))
             loseALife();
         handlers.setItemProp(current, "letters", playerData[current].letters.concat([letter]));
-        setTimeout(() => setIsNextPlayerReady(false), 1000);
+        if (playerData.filter((elem) => !elem.hasFinished).length > 1)
+            setTimeout(() => setIsNextPlayerReady(false), 1000);
     }
 
     const onKeyPress = (e: KeyboardEvent) => {
@@ -68,6 +89,14 @@ export function useHangman(nbPlayer: number) {
     }
 
     useEffect(() => {
+        if (!playerData[current].hasFinished) {
+            if (playerData[current].lives === 0 || testVictory())
+                handlers.setItemProp(current, "hasFinished", computePosition(testVictory()))
+        }
+        console.log(testVictory(), playerData[current].letters)
+    }, [playerData, current, handlers])
+
+    useEffect(() => {
         if (playerData[current].pseudo) {
             window.addEventListener("keypress", onKeyPress)
             return (() => window.removeEventListener("keypress", onKeyPress))
@@ -75,7 +104,7 @@ export function useHangman(nbPlayer: number) {
     })
 
     return ({
-        values: { playerData, currentPlayer: playerData[current], isOnStart, gameWord, easyMode, isNextPlayerReady },
-        handlers: { setEasyMode, testVictory, onRetry, onClick, suicide, changeCurrent, setPlayerData },
+        values: { playerData, currentPlayer: playerData[current], isOnStart, gameWord, easyMode, isNextPlayerReady, current },
+        handlers: { setEasyMode, isGameFinished, onRetry, onClick, suicide, changeCurrent, setPlayerData, computePosition },
     })
 }

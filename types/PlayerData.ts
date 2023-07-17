@@ -4,5 +4,6 @@ export interface PlayerData {
     lives: number;
     letters: string[];
     pseudo: string;
-    color: MantineColor;
+    color: string;
+    hasFinished: number;
 }

@@ -2,10 +2,13 @@
 import { Keyboard } from '@/components/Keyboard'
 import { Lifebar } from '@/components/Lifebar'
 import { ModalHeaderless } from '@/components/ModalHeaderless'
+import { PlayerCard } from '@/components/PlayerCard'
+import { ProgressionBar } from '@/components/ProgressionBar'
 import { Word } from '@/components/Word'
 import { useHangman } from '@/hooks/useHangman'
-import { Button, Checkbox, ColorPicker, Group, MantineColor, Modal, Stack, Text, TextInput, Title, useMantineColorScheme, useMantineTheme } from '@mantine/core'
+import { Affix, Box, Button, Checkbox, ColorPicker, Group, MantineColor, Modal, SimpleGrid, Stack, Text, TextInput, Title, useMantineColorScheme, useMantineTheme } from '@mantine/core'
 import { useInputState } from '@mantine/hooks'
+import { IconHeart, IconHeartBroken, IconHeartFilled } from '@tabler/icons-react'
 import { GetServerSidePropsContext } from 'next'
 import Link from 'next/link'
 import { FormEvent, useState } from 'react'
@@ -34,20 +37,30 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 export default function Game(props: GameProps) {
     const { values, handlers } = useHangman(props.params.nbPlayer);
     const [pseudo, setPseudo] = useInputState("");
-    const [color, setColor] = useInputState("#FFFFFF");
+    const [color, setColor] = useInputState("#000000");
 
     const theme = useMantineTheme()
+    const positions = [
+        { left: 0, top: 0 },
+        { right: 0, top: 0 },
+        { left: 0, bottom: 0 },
+        { right: 0, bottom: 0 },
+    ]
+    const nextPlayer = values.playerData[(values.current+1)%props.params.nbPlayer].pseudo;
+    // todo: prendre en compte les joueurs ayant terminé
 
     const onSubmit = (e: FormEvent) => {
         e.preventDefault();
         handlers.setPlayerData(pseudo, color);
+        setPseudo("");
+        setColor("#000000")
     }
 
 
     return (
         <>
             <ModalHeaderless
-                opened={!values.currentPlayer.lives || values.isOnStart || handlers.testVictory()}
+                opened={values.isOnStart || handlers.isGameFinished()}
                 onClose={handlers.onRetry}
             >
                 <Stack>
@@ -67,9 +80,9 @@ export default function Game(props: GameProps) {
                     />
                 </Stack>
             </ModalHeaderless>
-            <ModalHeaderless opened={!values.isNextPlayerReady} onClose={()=>{}}>
+            <ModalHeaderless opened={!values.isNextPlayerReady} onClose={() => {}}>
                 <Title fz="sm">
-                    Is next player ready ?
+                    Is {nextPlayer} ready ?
                 </Title>
                 <Button onClick={handlers.changeCurrent}>
                     Ready
@@ -77,23 +90,23 @@ export default function Game(props: GameProps) {
             </ModalHeaderless>
             <ModalHeaderless
                 opened={!values.currentPlayer.pseudo && !values.isOnStart}
-                onClose={()=>{}}
+                onClose={() => { }}
             >
                 <form onSubmit={onSubmit}>
-                <Stack>
-                <TextInput value={pseudo} onChange={setPseudo} label="Enter pseudo"/>
-                <ColorPicker
-                    value={color}
-                    onChange={setColor}
-                    withPicker={false}
-                    swatches={Object.keys(theme.colors).map((key)=>theme.colors[key][5])}
-                    fullWidth
-                    swatchesPerRow={Object.keys(theme.colors).length}
-                />
-                <Button type="submit" style={{backgroundColor: color}}>
-                    Submit
-                </Button>
-                </Stack>
+                    <Stack>
+                        <TextInput value={pseudo} onChange={setPseudo} label="Enter pseudo" />
+                        <ColorPicker
+                            value={color}
+                            onChange={setColor}
+                            withPicker={false}
+                            swatches={Object.keys(theme.colors).map((key) => theme.colors[key][5])}
+                            fullWidth
+                            swatchesPerRow={Object.keys(theme.colors).length}
+                        />
+                        <Button type="submit" style={{ backgroundColor: color }}>
+                            Submit
+                        </Button>
+                    </Stack>
                 </form>
             </ModalHeaderless>
             <Stack align="center" justify="flex-start">
@@ -102,13 +115,31 @@ export default function Game(props: GameProps) {
                 <Group>
                     <Button onClick={handlers.suicide} color="red">Kill yourself</Button>
                 </Group>
-                <Word word={values.gameWord} imputedChara={values.currentPlayer.letters} hint={values.easyMode} />
+                <Word
+                    word={values.gameWord}
+                    imputedChara={values.currentPlayer.letters}
+                    hint={values.easyMode}
+                />
                 <Keyboard
-                    imputedChar={(values.isNextPlayerReady)?values.currentPlayer.letters:[]}
+                    imputedChar={(values.isNextPlayerReady) ? values.currentPlayer.letters : []}
                     correctChar={values.gameWord.toUpperCase().split('')}
                     onClick={handlers.onClick}
                 />
+
             </Stack>
+            {Array.from({ length: props.params.nbPlayer }).map((_, index) => {
+                return (
+                    <Affix key={index} position={positions[index]}>
+                        <PlayerCard
+                            {...values.playerData[index]}
+                            isCurrent={values.current === index}
+                            gameWord={values.gameWord}
+                            easyMode={values.easyMode}
+                        />
+                    </Affix>
+
+                )
+            })}
         </>
     )
 }

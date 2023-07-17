@@ -1,26 +1,27 @@
 import { Group, Title } from "@mantine/core";
+import { IconSquare, IconSquareCheckFilled } from "@tabler/icons-react";
 
-interface WordProps {
+interface ProgressionBarProps {
     word: string;
     imputedChara: string[];
     hint: boolean;
-    isUI?: boolean;
+    color: string;
 }
 
-export function Word(props: WordProps) {
+export function ProgressionBar(props: ProgressionBarProps) {
     const wordTab = props.word.toUpperCase().split('');
 
     return (
-        <Group align="center">
+        <Group align="center" spacing="xs">
             {wordTab.map((elem, index) => {
                 if (props.imputedChara.includes(elem) || (props.hint && index === 0)) {
                     return (
-                        <Title key={index} fz={40} color="white">{elem}</Title>
+                        <IconSquareCheckFilled key={index} style={{color: props.color}}/>
                     )
                 }
                 else {
                     return (
-                        <Title key={index} fz={40} color="white">_</Title>
+                        <IconSquare key={index}/>
                     )
                 }
             }
