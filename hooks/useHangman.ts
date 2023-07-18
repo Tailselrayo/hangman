@@ -1,11 +1,15 @@
 import { useListState } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import en from '@/json/en.json'
+import de from '@/json/de.json'
+import es from '@/json/de.json'
+import fr from '@/json/fr.json'
 import { PlayerData } from "@/types/PlayerData";
 import { MantineColor } from "@mantine/core";
+import { Language } from "@/types/Language";
 
 
-export function useHangman(nbPlayer: number) {
+export function useHangman(nbPlayer: number, language: Language) {
     const [isOnStart, setIsOnStart] = useState(true)
     const [playerData, handlers] = useListState<PlayerData>(
         Array.from({ length: nbPlayer }).map(() => ({
@@ -22,7 +26,25 @@ export function useHangman(nbPlayer: number) {
     const [isNextPlayerReady, setIsNextPlayerReady] = useState(true);
 
     const possibleWords = en.words.filter((elem) => elem.englishWord.length > 4);
+    const possibleMots = fr.words.filter((elem) => elem.englishWord.length > 4);
+    const possiblePalabras = es.words.filter((elem) => elem.englishWord.length > 4);
+    const possibleWorts = de.words.filter((elem) => elem.englishWord.length > 4);
 
+    const choseWord = (language: Language) => {
+        if (language==="es") {
+            return possiblePalabras[Math.floor(Math.random() * possiblePalabras.length)].targetWord
+        }
+        else if (language==="de") {
+            return possibleWorts[Math.floor(Math.random() * possibleWorts.length)].targetWord
+        }
+        else if (language==="fr") {
+            return possibleMots[Math.floor(Math.random() * possibleMots.length)].targetWord
+        }
+        else {
+            return possibleWords[Math.floor(Math.random() * possibleWords.length)].englishWord
+        }
+    }
+    
     const changeCurrent = () => {
         setCurrent(computeNext());
         setIsNextPlayerReady(true);
@@ -72,11 +94,12 @@ export function useHangman(nbPlayer: number) {
 
     const onRetry = () => {
         setIsOnStart(false);
-        setGameWord(possibleWords[Math.floor(Math.random() * possibleWords.length)].englishWord);
+        setGameWord(choseWord("en"));
         handlers.apply((elem) => ({ ...elem, lives: 6, letters: [], hasFinished: 0 }))
     }
 
     const onClick = (letter: string) => {
+        console.log(gameWord)
         if (playerData[current].letters.includes(letter))
             return;
         if (!gameWord.toUpperCase().split('').includes(letter))
@@ -97,7 +120,6 @@ export function useHangman(nbPlayer: number) {
             if (playerData[current].lives === 0 || testVictory())
                 handlers.setItemProp(current, "hasFinished", computePosition(testVictory()))
         }
-        console.log(testVictory(), playerData[current].letters)
     }, [playerData, current, handlers])
 
     useEffect(() => {
