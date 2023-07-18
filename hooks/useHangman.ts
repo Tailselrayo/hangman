@@ -24,12 +24,16 @@ export function useHangman(nbPlayer: number) {
     const possibleWords = en.words.filter((elem) => elem.englishWord.length > 4);
 
     const changeCurrent = () => {
+        setCurrent(computeNext());
+        setIsNextPlayerReady(true);
+    }
+
+    const computeNext = () => {
         let counter = 1;
         while (counter < nbPlayer + 1 && playerData[(current + counter) % nbPlayer].hasFinished) {
             counter++;
         }
-        setCurrent((current + counter) % nbPlayer);
-        setIsNextPlayerReady(true);
+        return (current+counter)%nbPlayer
     }
 
     const setPlayerData = (pseudo: string, color: MantineColor) => {
@@ -105,6 +109,16 @@ export function useHangman(nbPlayer: number) {
 
     return ({
         values: { playerData, currentPlayer: playerData[current], isOnStart, gameWord, easyMode, isNextPlayerReady, current },
-        handlers: { setEasyMode, isGameFinished, onRetry, onClick, suicide, changeCurrent, setPlayerData, computePosition },
+        handlers: {
+                    setEasyMode,
+                    isGameFinished,
+                    onRetry,
+                    onClick,
+                    suicide,
+                    changeCurrent,
+                    setPlayerData,
+                    computePosition,
+                    computeNext,
+                },
     })
 }

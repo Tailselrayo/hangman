@@ -46,7 +46,7 @@ export default function Game(props: GameProps) {
         { left: 0, bottom: 0 },
         { right: 0, bottom: 0 },
     ]
-    const nextPlayer = values.playerData[(values.current+1)%props.params.nbPlayer].pseudo;
+    const nextPlayer = values.playerData[handlers.computeNext()].pseudo;
     // todo: prendre en compte les joueurs ayant terminé
 
     const onSubmit = (e: FormEvent) => {
@@ -82,7 +82,7 @@ export default function Game(props: GameProps) {
             </ModalHeaderless>
             <ModalHeaderless opened={!values.isNextPlayerReady} onClose={() => {}}>
                 <Title fz="sm">
-                    Is {nextPlayer} ready ?
+                    Is {nextPlayer?nextPlayer:"next player"} ready ?
                 </Title>
                 <Button onClick={handlers.changeCurrent}>
                     Ready

@@ -1,4 +1,3 @@
-import { MantineColor } from "@mantine/core";
 
 export interface PlayerData {
     lives: number;
