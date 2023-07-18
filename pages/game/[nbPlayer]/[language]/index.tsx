@@ -6,6 +6,7 @@ import { PlayerCard } from '@/components/PlayerCard'
 import { ProgressionBar } from '@/components/ProgressionBar'
 import { Word } from '@/components/Word'
 import { useHangman } from '@/hooks/useHangman'
+import { Language } from '@/types/Language'
 import { Affix, Box, Button, Checkbox, ColorPicker, Group, MantineColor, Modal, SimpleGrid, Stack, Text, TextInput, Title, useMantineColorScheme, useMantineTheme } from '@mantine/core'
 import { useInputState } from '@mantine/hooks'
 import { IconHeart, IconHeartBroken, IconHeartFilled } from '@tabler/icons-react'
@@ -14,28 +15,53 @@ import Link from 'next/link'
 import { FormEvent, useState } from 'react'
 
 interface GameProps {
-    params: { nbPlayer: number };
+    nbPlayer: number;
+    language: Language;
 }
+
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
     const params = context.params;
-    if (!params || !params.nbPlayer || Array.isArray(params.nbPlayer) || isNaN(parseInt(params.nbPlayer))) {
-        return (
-            {
-                redirect: "/",
+    const langTab = ["en","fr","de","es"];
+    const nbPlayer = parseInt(params?.nbPlayer as string)
+    const isNbPlayerNOK = (!params||!params.nbPlayer||Array.isArray(params.nbPlayer)||isNaN(nbPlayer))
+    const isLanguageNOK = (!params||!params.language||Array.isArray(params.language)||!langTab.includes(params.language))
+
+    if (isNbPlayerNOK||isLanguageNOK) {
+        return ({
+                redirect: {
+                    destination: "/",
+                    permanent: false,
+                }
+            })
+    }
+    if (nbPlayer<1) {
+        return ({
+            redirect: {
+                destination: `/game/1/${params.language}`,
                 permanent: false,
             }
-        )
+        })
+    }
+    else if (nbPlayer>4) {
+        return ({
+            redirect: {
+                destination: `/game/4/${params.language}`,
+                permanent: false,
+            }
+        })
     }
     return ({
         props: {
-            nbPlayer: parseInt(params.nbPlayer),
+            nbPlayer: nbPlayer,
+            language: params.language,
         }
     })
 }
 
 export default function Game(props: GameProps) {
-    const { values, handlers } = useHangman(props.params.nbPlayer);
+    console.log(props);
+    const { values, handlers } = useHangman(props.nbPlayer, props.language);
     const [pseudo, setPseudo] = useInputState("");
     const [color, setColor] = useInputState("#000000");
 
@@ -127,7 +153,7 @@ export default function Game(props: GameProps) {
                 />
 
             </Stack>
-            {Array.from({ length: props.params.nbPlayer }).map((_, index) => {
+            {Array.from({ length: props.nbPlayer }).map((_, index) => {
                 return (
                     <Affix key={index} position={positions[index]}>
                         <PlayerCard
