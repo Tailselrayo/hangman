@@ -1,3 +1,4 @@
+import { cutSpecialChar } from "@/utils/cutSpecialChar";
 import { Group, Title } from "@mantine/core";
 
 interface WordProps {
@@ -8,14 +9,14 @@ interface WordProps {
 }
 
 export function Word(props: WordProps) {
-    const wordTab = props.word.toUpperCase().split('');
+    const wordTab = cutSpecialChar(props.word).toUpperCase().split('');
 
     return (
         <Group align="center">
             {wordTab.map((elem, index) => {
                 if (props.imputedChara.includes(elem) || (props.hint && index === 0)) {
                     return (
-                        <Title key={index} fz={40} color="white">{elem}</Title>
+                        <Title key={index} fz={40} color="white">{props.word.charAt(index).toUpperCase()}</Title>
                     )
                 }
                 else {

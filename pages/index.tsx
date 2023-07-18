@@ -34,8 +34,9 @@ export default function Home() {
       <ModalHeaderless opened={nbSelected !== 0} onClose={modalHandlers.close}>
         <Title fz="md">Choose the words' language</Title>
         {Array.from({ length: 4 }).map((_, index) => {
+          //conidtion in href cause flag url (uk) and data extension (en) don't match
           return (
-            <Link key={index} href={`/game/${nbSelected}/${countries[index]}`}>
+            <Link key={index} href={`/game/${nbSelected}/${countries[index]==="uk"?"en":countries[index]}`}>
               <Image
                 src={`https://hatscripts.github.io/circle-flags/flags/${countries[index]}.svg`}
                 alt={`${countries[index]} flag`}

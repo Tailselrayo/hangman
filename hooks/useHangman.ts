@@ -1,15 +1,14 @@
 import { useListState } from "@mantine/hooks";
 import { useEffect, useState } from "react";
-import en from '@/json/en.json'
-import de from '@/json/de.json'
-import es from '@/json/de.json'
-import fr from '@/json/fr.json'
 import { PlayerData } from "@/types/PlayerData";
 import { MantineColor } from "@mantine/core";
 import { Language } from "@/types/Language";
+import { cutSpecialChar } from "@/utils/cutSpecialChar";
+import { choseRandomWord } from "@/utils/choseRandomWord";
 
 
 export function useHangman(nbPlayer: number, language: Language) {
+    const [gameWord, setGameWord] = useState("")
     const [isOnStart, setIsOnStart] = useState(true)
     const [playerData, handlers] = useListState<PlayerData>(
         Array.from({ length: nbPlayer }).map(() => ({
@@ -20,31 +19,10 @@ export function useHangman(nbPlayer: number, language: Language) {
             hasFinished: 0,
         }))
     );
-    const [gameWord, setGameWord] = useState("");
     const [easyMode, setEasyMode] = useState(true);
     const [current, setCurrent] = useState(0);
     const [isNextPlayerReady, setIsNextPlayerReady] = useState(true);
 
-    const possibleWords = en.words.filter((elem) => elem.englishWord.length > 4);
-    const possibleMots = fr.words.filter((elem) => elem.englishWord.length > 4);
-    const possiblePalabras = es.words.filter((elem) => elem.englishWord.length > 4);
-    const possibleWorts = de.words.filter((elem) => elem.englishWord.length > 4);
-
-    const choseWord = (language: Language) => {
-        if (language==="es") {
-            return possiblePalabras[Math.floor(Math.random() * possiblePalabras.length)].targetWord
-        }
-        else if (language==="de") {
-            return possibleWorts[Math.floor(Math.random() * possibleWorts.length)].targetWord
-        }
-        else if (language==="fr") {
-            return possibleMots[Math.floor(Math.random() * possibleMots.length)].targetWord
-        }
-        else {
-            return possibleWords[Math.floor(Math.random() * possibleWords.length)].englishWord
-        }
-    }
-    
     const changeCurrent = () => {
         setCurrent(computeNext());
         setIsNextPlayerReady(true);
@@ -55,7 +33,7 @@ export function useHangman(nbPlayer: number, language: Language) {
         while (counter < nbPlayer + 1 && playerData[(current + counter) % nbPlayer].hasFinished) {
             counter++;
         }
-        return (current+counter)%nbPlayer
+        return (current + counter) % nbPlayer
     }
 
     const setPlayerData = (pseudo: string, color: MantineColor) => {
@@ -78,15 +56,19 @@ export function useHangman(nbPlayer: number, language: Language) {
 
     const suicide = () => {
         handlers.setItemProp(current, "lives", 0);
-        setTimeout(() => setIsNextPlayerReady(false), 500);
+        if (nbPlayer !== 1) {
+            setTimeout(() => setIsNextPlayerReady(false), 500);
+        }
         handlers.setItemProp(current, "hasFinished", computePosition(false))
     }
 
     const testVictory = () => {
-        let word = gameWord.toUpperCase();
+        let word = cutSpecialChar(gameWord).toUpperCase();
+        console.log(gameWord, word)
         const i = easyMode ? 1 : 0;
         return word.slice(i).split('').filter((elem) => playerData[current].letters.includes(elem)).length + i === gameWord.length;
     }
+
 
     const isGameFinished = () => {
         return playerData.filter((_, index) => !playerData[index].hasFinished).length === 0
@@ -94,7 +76,7 @@ export function useHangman(nbPlayer: number, language: Language) {
 
     const onRetry = () => {
         setIsOnStart(false);
-        setGameWord(choseWord("en"));
+        setGameWord(choseRandomWord(language))
         handlers.apply((elem) => ({ ...elem, lives: 6, letters: [], hasFinished: 0 }))
     }
 
@@ -102,13 +84,14 @@ export function useHangman(nbPlayer: number, language: Language) {
         console.log(gameWord)
         if (playerData[current].letters.includes(letter))
             return;
-        if (!gameWord.toUpperCase().split('').includes(letter))
+        if (!cutSpecialChar(gameWord).toUpperCase().split('').includes(letter))
             loseALife();
         handlers.setItemProp(current, "letters", playerData[current].letters.concat([letter]));
         if (playerData.filter((elem) => !elem.hasFinished).length > 1)
             setTimeout(() => setIsNextPlayerReady(false), 1000);
     }
 
+    //Handling of the keyboard inputs (only the 26 alphabetical)
     const onKeyPress = (e: KeyboardEvent) => {
         const letter = e.key.toUpperCase();
         if (letter.charCodeAt(0) >= 'A'.charCodeAt(0) && letter.charCodeAt(0) <= 'Z'.charCodeAt(0) && letter.length === 1)
@@ -132,15 +115,15 @@ export function useHangman(nbPlayer: number, language: Language) {
     return ({
         values: { playerData, currentPlayer: playerData[current], isOnStart, gameWord, easyMode, isNextPlayerReady, current },
         handlers: {
-                    setEasyMode,
-                    isGameFinished,
-                    onRetry,
-                    onClick,
-                    suicide,
-                    changeCurrent,
-                    setPlayerData,
-                    computePosition,
-                    computeNext,
-                },
+            setEasyMode,
+            isGameFinished,
+            onRetry,
+            onClick,
+            suicide,
+            changeCurrent,
+            setPlayerData,
+            computePosition,
+            computeNext,
+        },
     })
 }

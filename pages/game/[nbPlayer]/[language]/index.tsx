@@ -3,27 +3,26 @@ import { Keyboard } from '@/components/Keyboard'
 import { Lifebar } from '@/components/Lifebar'
 import { ModalHeaderless } from '@/components/ModalHeaderless'
 import { PlayerCard } from '@/components/PlayerCard'
-import { ProgressionBar } from '@/components/ProgressionBar'
 import { Word } from '@/components/Word'
 import { useHangman } from '@/hooks/useHangman'
 import { Language } from '@/types/Language'
-import { Affix, Box, Button, Checkbox, ColorPicker, Group, MantineColor, Modal, SimpleGrid, Stack, Text, TextInput, Title, useMantineColorScheme, useMantineTheme } from '@mantine/core'
+import { cutSpecialChar } from '@/utils/cutSpecialChar'
+import { Affix, Button, Checkbox, ColorPicker, Group, Stack, Text, TextInput, Title, useMantineTheme } from '@mantine/core'
 import { useInputState } from '@mantine/hooks'
-import { IconHeart, IconHeartBroken, IconHeartFilled } from '@tabler/icons-react'
 import { GetServerSidePropsContext } from 'next'
 import Link from 'next/link'
-import { FormEvent, useState } from 'react'
+import { FormEvent} from 'react'
 
 interface GameProps {
     nbPlayer: number;
     language: Language;
 }
 
-
 export async function getServerSideProps(context: GetServerSidePropsContext) {
     const params = context.params;
     const langTab = ["en","fr","de","es"];
     const nbPlayer = parseInt(params?.nbPlayer as string)
+    //Verify params gotten are of correct type, go back to home is they're not
     const isNbPlayerNOK = (!params||!params.nbPlayer||Array.isArray(params.nbPlayer)||isNaN(nbPlayer))
     const isLanguageNOK = (!params||!params.language||Array.isArray(params.language)||!langTab.includes(params.language))
 
@@ -60,7 +59,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 }
 
 export default function Game(props: GameProps) {
-    console.log(props);
     const { values, handlers } = useHangman(props.nbPlayer, props.language);
     const [pseudo, setPseudo] = useInputState("");
     const [color, setColor] = useInputState("#000000");
@@ -148,7 +146,7 @@ export default function Game(props: GameProps) {
                 />
                 <Keyboard
                     imputedChar={(values.isNextPlayerReady) ? values.currentPlayer.letters : []}
-                    correctChar={values.gameWord.toUpperCase().split('')}
+                    correctChar={cutSpecialChar(values.gameWord).toUpperCase().split('')}
                     onClick={handlers.onClick}
                 />
 
