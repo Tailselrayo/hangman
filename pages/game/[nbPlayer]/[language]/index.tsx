@@ -1,4 +1,5 @@
 'use client'
+import { GameModal } from '@/components/GameModal'
 import { Keyboard } from '@/components/Keyboard'
 import { Lifebar } from '@/components/Lifebar'
 import { ModalHeaderless } from '@/components/ModalHeaderless'
@@ -7,11 +8,10 @@ import { Word } from '@/components/Word'
 import { useHangman } from '@/hooks/useHangman'
 import { Language } from '@/types/Language'
 import { cutSpecialChar } from '@/utils/cutSpecialChar'
-import { Affix, Button, Checkbox, ColorPicker, Group, Stack, Text, TextInput, Title, useMantineTheme } from '@mantine/core'
+import { Affix, Button, ColorPicker, Group, Stack, TextInput, Title, useMantineTheme } from '@mantine/core'
 import { useInputState } from '@mantine/hooks'
 import { GetServerSidePropsContext } from 'next'
-import Link from 'next/link'
-import { FormEvent} from 'react'
+import { FormEvent } from 'react'
 
 interface GameProps {
     nbPlayer: number;
@@ -20,21 +20,21 @@ interface GameProps {
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
     const params = context.params;
-    const langTab = ["en","fr","de","es"];
+    const langTab = ["en", "fr", "de", "es"];
     const nbPlayer = parseInt(params?.nbPlayer as string)
     //Verify params gotten are of correct type, go back to home is they're not
-    const isNbPlayerNOK = (!params||!params.nbPlayer||Array.isArray(params.nbPlayer)||isNaN(nbPlayer))
-    const isLanguageNOK = (!params||!params.language||Array.isArray(params.language)||!langTab.includes(params.language))
+    const isNbPlayerNOK = (!params || !params.nbPlayer || Array.isArray(params.nbPlayer) || isNaN(nbPlayer))
+    const isLanguageNOK = (!params || !params.language || Array.isArray(params.language) || !langTab.includes(params.language))
 
-    if (isNbPlayerNOK||isLanguageNOK) {
+    if (isNbPlayerNOK || isLanguageNOK) {
         return ({
-                redirect: {
-                    destination: "/",
-                    permanent: false,
-                }
-            })
+            redirect: {
+                destination: "/",
+                permanent: false,
+            }
+        })
     }
-    if (nbPlayer<1) {
+    if (nbPlayer < 1) {
         return ({
             redirect: {
                 destination: `/game/1/${params.language}`,
@@ -42,7 +42,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
             }
         })
     }
-    else if (nbPlayer>4) {
+    else if (nbPlayer > 4) {
         return ({
             redirect: {
                 destination: `/game/4/${params.language}`,
@@ -83,34 +83,26 @@ export default function Game(props: GameProps) {
 
     return (
         <>
-            <ModalHeaderless
-                opened={values.isOnStart || handlers.isGameFinished()}
+            <GameModal
+                playerData={values.playerData}
+                nbPlayer={props.nbPlayer}
+                opened={(values.isOnStart||handlers.isGameFinished())}
+                isOnStart={values.isOnStart}
+                word={values.gameWord}
+                easyMode={values.easyMode}
                 onClose={handlers.onRetry}
-            >
-                <Stack>
-                    <Text>{(values.isOnStart ? "Welcome to the hangman game !" :
-                        (values.currentPlayer.lives !== 0 ? "Congrats, you won !" : ("You lose ! The word was " + values.gameWord)))}
-                    </Text>
-                    <Group h="100%" align="center">
-                        <Button onClick={handlers.onRetry} color="green">
-                            {values.isOnStart ? "Start" : "Retry"}
-                        </Button>
-                        <Link href="/"><Button color="blue">Home</Button></Link>
-                    </Group>
-                    <Checkbox
-                        checked={values.easyMode}
-                        onChange={() => handlers.setEasyMode(!values.easyMode)}
-                        label="Easy Mode"
-                    />
+                onRestart={handlers.onRetry}
+                onChangeEasyMode={handlers.setEasyMode}
+            />
+            <ModalHeaderless opened={!values.isNextPlayerReady} onClose={() => { }}>
+                <Stack align="center">
+                    <Title fz="lg">
+                        Is {nextPlayer ? nextPlayer : "next player"} ready ?
+                    </Title>
+                    <Button onClick={handlers.changeCurrent} variant="gradient" gradient={{from:"green",to:"lime"}}>
+                        Ready
+                    </Button>
                 </Stack>
-            </ModalHeaderless>
-            <ModalHeaderless opened={!values.isNextPlayerReady} onClose={() => {}}>
-                <Title fz="sm">
-                    Is {nextPlayer?nextPlayer:"next player"} ready ?
-                </Title>
-                <Button onClick={handlers.changeCurrent}>
-                    Ready
-                </Button>
             </ModalHeaderless>
             <ModalHeaderless
                 opened={!values.currentPlayer.pseudo && !values.isOnStart}
@@ -153,12 +145,13 @@ export default function Game(props: GameProps) {
             </Stack>
             {Array.from({ length: props.nbPlayer }).map((_, index) => {
                 return (
-                    <Affix key={index} position={positions[index]}>
+                    <Affix key={index} position={positions[index]} zIndex={100}>
                         <PlayerCard
                             {...values.playerData[index]}
                             isCurrent={values.current === index}
                             gameWord={values.gameWord}
                             easyMode={values.easyMode}
+                            nbPlayer={props.nbPlayer}
                         />
                     </Affix>
 

@@ -14,6 +14,7 @@ export function ModalHeaderless(props: ModalHeaderlessProps) {
             opened = {props.opened}
             onClose={props.onClose}
             transitionProps={{transition:"scale"}}
+            yOffset={100}
         >
             <Modal.Overlay blur={15}/>
             <Modal.Content>

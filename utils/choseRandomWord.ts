@@ -1,7 +1,7 @@
 import { Language } from "@/types/Language";
 import en from '@/json/en.json'
 import de from '@/json/de.json'
-import es from '@/json/de.json'
+import es from '@/json/es.json'
 import fr from '@/json/fr.json'
 
 export function choseRandomWord(language: Language) {
