@@ -44,7 +44,7 @@ export function useHangman(nbPlayer: number, language: Language) {
         const playerFinished = playerData.filter((elem) => elem.hasFinished)
         const countDead = playerFinished.filter((elem) => elem.lives === 0).length
         if (!hasWon) {
-            return 4 - countDead
+            return nbPlayer - countDead
         }
         return 1 + (playerFinished.length - countDead)
     }
@@ -56,7 +56,7 @@ export function useHangman(nbPlayer: number, language: Language) {
 
     const suicide = () => {
         handlers.setItemProp(current, "lives", 0);
-        if (nbPlayer !== 1) {
+        if (nbPlayer !== 1 && !testVictory()) {
             setTimeout(() => setIsNextPlayerReady(false), 500);
         }
         handlers.setItemProp(current, "hasFinished", computePosition(false))
@@ -64,7 +64,6 @@ export function useHangman(nbPlayer: number, language: Language) {
 
     const testVictory = () => {
         let word = cutSpecialChar(gameWord).toUpperCase();
-        console.log(gameWord, word)
         const i = easyMode ? 1 : 0;
         return word.slice(i).split('').filter((elem) => playerData[current].letters.includes(elem)).length + i === gameWord.length;
     }

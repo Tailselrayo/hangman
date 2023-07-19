@@ -1,6 +1,6 @@
 import { AppProps } from 'next/app';
 import Head from 'next/head';
-import { AppShell, Box, MantineProvider } from '@mantine/core';
+import {  Box, MantineProvider } from '@mantine/core';
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props;
@@ -16,7 +16,7 @@ export default function App(props: AppProps) {
         withGlobalStyles
         withNormalizeCSS
       >
-        <Box w="100vw" h="100vh" bg="dark">
+        <Box miw="100vw" mih="100vh" bg="dark">
           <Component {...pageProps} />
         </Box>
       </MantineProvider>

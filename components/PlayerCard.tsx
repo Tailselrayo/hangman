@@ -7,6 +7,7 @@ interface PlayerCardProps extends PlayerData {
     isCurrent: boolean;
     gameWord: string;
     easyMode: boolean;
+    nbPlayer: number;
 }
 
 export function PlayerCard(props: PlayerCardProps) {
@@ -23,7 +24,7 @@ export function PlayerCard(props: PlayerCardProps) {
                 borderRadius: theme.radius.lg,
             }}
         >
-            <Title ta="center" fz="lg" color="white">{props.pseudo}</Title>
+            <Title ta="center" fz="lg" color="gray.2">{props.pseudo}</Title>
             <ProgressionBar
                 word={props.gameWord}
                 imputedChara={props.letters}
@@ -35,11 +36,15 @@ export function PlayerCard(props: PlayerCardProps) {
                     {props.lives ?
                         <>
                             <IconHeart fill="red" color="red" />
-                            <Text>{` x${props.lives}`}</Text>
+                            <Text color="gray.2">{` x${props.lives}`}</Text>
                         </> :
                         <IconHeartBroken color="cyan" />}
                 </Group>
-                <Title ta="right" color="white">{props.hasFinished?`#${props.hasFinished}`:"#0"}</Title>
+                <Title
+                    display={props.nbPlayer>1?"block":"none"}
+                    ta="right"
+                    color="gray.2">{props.hasFinished?`#${props.hasFinished}`:""}
+                </Title>
             </Group>
         </Stack>
     )
